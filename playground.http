@@ -1,0 +1,8 @@
+@host = http://localhost:3000/api
+POST  {{host}}/users
+Content-Type: application/json
+
+{
+    "email": "mohammedosama@ieee.org",
+    "username": "mohammedosama"
+}
