@@ -3,6 +3,7 @@ package handler
 import (
     "encoding/json"
     "net/http"
+    "strconv"
 
     "github.com/matryer/way"
     "github.com/secmohammed/go-twitter/internal/service"
@@ -53,6 +54,19 @@ func (h *handler) user(w http.ResponseWriter, r *http.Request) {
     }
     respond(w, u, http.StatusOK)
 }
+func (h *handler) users(w http.ResponseWriter, r *http.Request) {
+    q := r.URL.Query()
+    search := q.Get("search")
+    first, _ := strconv.Atoi(q.Get("first"))
+    after := q.Get("after")
+    response, err := h.Users(r.Context(), search, first, after)
+    if err != nil {
+        respondError(w, err)
+        return
+    }
+    respond(w, response, http.StatusOK)
+}
+
 func (h *handler) toggleFollow(w http.ResponseWriter, r *http.Request) {
     ctx := r.Context()
     username := way.Param(ctx, "username")

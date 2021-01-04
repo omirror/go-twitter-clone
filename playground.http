@@ -12,10 +12,23 @@ POST {{host}}/login
 Content-Type: application/json
 
 {
-    "email": "mohammedosam1a@ieee.org"
+    "email": "mohammedosama@ieee.org"
 }
 
 ###
 
 GET {{host}}/user
-Authorization: Bearer {{login.response.body.token}}
+Authorization: Bearer KCEHnLZScbKX5KYfyFajcdsYPUrgn6NmrcNRvV7hgZEeZe8450WIYPzufs4u74
+
+###
+GET {{host}}/users?search=mohammed&first=2&after=
+Authorization: Bearer KCEI8sgrRvpkux6yIBNmYeQjQo7iGwA5zjZ4mr8dDO0VN46jfMPV2jKcSMtcBH
+
+###
+
+POST {{host}}/users/mohammedosama/toggle_follow
+Authorization: Bearer KCEHnLZScbKX5KYfyFajcdsYPUrgn6NmrcNRvV7hgZEeZe8450WIYPzufs4u74
+
+###
+GET {{host}}/users/ahmedosama
+Authorization: Bearer KCEHnLZScbKX5KYfyFajcdsYPUrgn6NmrcNRvV7hgZEeZe8450WIYPzufs4u74
