@@ -3,6 +3,19 @@ POST  {{host}}/users
 Content-Type: application/json
 
 {
-    "email": "mohammedosama@ieee.org",
+    "email": "mohammedosam1a@ieee.org",
     "username": "mohammedosama"
 }
+###
+
+POST {{host}}/login
+Content-Type: application/json
+
+{
+    "email": "mohammedosam1a@ieee.org"
+}
+
+###
+
+GET {{host}}/user
+Authorization: Bearer 1LOUzKi4V2hi1R2TWwmckqWJ2Xk3QpjCOLErnPojtwTtWsb0Gj7b9Vtp3tUXCBeR

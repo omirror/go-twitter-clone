@@ -29,6 +29,7 @@ func main() {
         return
     }
     codec := branca.NewBranca("supersecretkeyyoushouldnotcommit")
+    codec.SetTTL(uint32(service.TokenTTL.Seconds()))
     s := service.New(db, codec)
     h := handler.New(s)
     addr := fmt.Sprintf(":%d", port)
