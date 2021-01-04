@@ -17,6 +17,7 @@ func New(s *service.Service) http.Handler {
     api := way.NewRouter()
     api.HandleFunc("POST", "/login", h.login)
     api.HandleFunc("GET", "/user", h.authUser)
+    api.HandleFunc("POST", "/users/:username/toggle_follow", h.toggleFollow)
     api.HandleFunc("POST", "/users", h.createUser)
     r := way.NewRouter()
     r.Handle("*", "/api...", http.StripPrefix("/api", h.withAuth(api)))

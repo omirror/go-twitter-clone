@@ -18,4 +18,4 @@ Content-Type: application/json
 ###
 
 GET {{host}}/user
-Authorization: Bearer 1LOUzKi4V2hi1R2TWwmckqWJ2Xk3QpjCOLErnPojtwTtWsb0Gj7b9Vtp3tUXCBeR
+Authorization: Bearer {{login.response.body.token}}
