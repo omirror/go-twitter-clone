@@ -400,6 +400,24 @@ func (s *Service) Followers(ctx context.Context, username string, first int, aft
     }
     return uu, nil
 }
+func (s *Service) userByID(ctx context.Context, id int64) (User, error) {
+    var u User
+    var avatar sql.NullString
+    query := "SELECT username, avatar from users WHERE id = $1"
+    err := s.db.QueryRowContext(ctx, query, id).Scan(&u.Username, &avatar)
+    if err == sql.ErrNoRows {
+        return u, ErrUserNotFound
+    }
+    if err != nil {
+        return u, fmt.Errorf("couldn't query select auth user: %v", err)
+    }
+    if avatar.Valid {
+        avatarURL := s.origin + "/public/avatars/users/" + avatar.String
+        u.AvatarURL = &avatarURL
+    }
+    u.ID = id
+    return u, nil
+}
 
 //Followees in asc order with forward pagination
 func (s *Service) Followees(ctx context.Context, username string, first int, after string) ([]UserProfile, error) {

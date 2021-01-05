@@ -79,19 +79,5 @@ func (s *Service) AuthUser(ctx context.Context) (User, error) {
     if !ok {
         return u, ErrUnauthenticated
     }
-    var avatar sql.NullString
-    query := "SELECT username, avatar from users WHERE id = $1"
-    err := s.db.QueryRowContext(ctx, query, uid).Scan(&u.Username, &avatar)
-    if err == sql.ErrNoRows {
-        return u, ErrUserNotFound
-    }
-    if err != nil {
-        return u, fmt.Errorf("couldn't query select auth user: %v", err)
-    }
-    if avatar.Valid {
-        avatarURL := s.origin + "/public/avatars/users/" + avatar.String
-        u.AvatarURL = &avatarURL
-    }
-    u.ID = uid
-    return u, nil
+    return s.userByID(ctx, uid)
 }
