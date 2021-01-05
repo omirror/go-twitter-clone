@@ -7,7 +7,7 @@ Content-Type: application/json
     "username": "mohammedosama"
 }
 ###
-
+# @name login
 POST {{host}}/login
 Content-Type: application/json
 
@@ -18,17 +18,24 @@ Content-Type: application/json
 ###
 
 GET {{host}}/user
-Authorization: Bearer KCEHnLZScbKX5KYfyFajcdsYPUrgn6NmrcNRvV7hgZEeZe8450WIYPzufs4u74
+Authorization: Bearer {{login.response.body.token}}
 
 ###
 GET {{host}}/users?search=mohammed&first=2&after=
-Authorization: Bearer KCEI8sgrRvpkux6yIBNmYeQjQo7iGwA5zjZ4mr8dDO0VN46jfMPV2jKcSMtcBH
-
+Authorization: Bearer {{login.response.body.token}}
 ###
 
 POST {{host}}/users/mohammedosama/toggle_follow
-Authorization: Bearer KCEHnLZScbKX5KYfyFajcdsYPUrgn6NmrcNRvV7hgZEeZe8450WIYPzufs4u74
+Authorization: Bearer {{login.response.body.token}}
 
 ###
 GET {{host}}/users/ahmedosama
-Authorization: Bearer KCEHnLZScbKX5KYfyFajcdsYPUrgn6NmrcNRvV7hgZEeZe8450WIYPzufs4u74
+Authorization: Bearer {{login.response.body.token}}
+
+###
+GET {{host}}/users/ahmedosama/followers?first=2&after=
+Authorization: Bearer {{login.response.body.token}}
+
+###
+GET {{host}}/users/ahmedosama/followees?first=2&after=
+Authorization: Bearer {{login.response.body.token}}
