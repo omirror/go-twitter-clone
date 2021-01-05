@@ -16,6 +16,8 @@ var (
     ErrInvalidContent = errors.New("invalid content")
     //ErrInvalidSpoiler is used to indicate that spoiler is invalid.
     ErrInvalidSpoiler = errors.New("invalid spoiler")
+    //ErrPostNotFound denotes a not found post.
+    ErrPostNotFound = errors.New("post not found")
 )
 
 // Post model.
@@ -28,6 +30,64 @@ type Post struct {
     CreatedAt time.Time `json:"created_at"`
     User      *User     `json:"user,omitempty"`
     Mine      bool      `json:"mine"`
+}
+
+//ToggleLikeResponse is used to formulate the like response.
+type ToggleLikeResponse struct {
+    Liked      bool `json:"liked"`
+    LikesCount int  `json:"likes_count"`
+}
+
+//TogglePostLike is used to toggle the post like for the currently authenticated user.
+func (s *Service) TogglePostLike(ctx context.Context, postID int64) (ToggleLikeResponse, error) {
+    var response ToggleLikeResponse
+    uid, ok := ctx.Value(KeyAuthUserID).(int64)
+    if !ok {
+        return response, ErrUnauthenticated
+    }
+    tx, err := s.db.BeginTx(ctx, nil)
+    if err != nil {
+        return response, fmt.Errorf("Couldn't start transaction: %v", err)
+    }
+    defer tx.Rollback()
+    query := `
+        SELECT EXISTS (
+            SELECT 1 from post_likes WHERE user_id = $1 AND post_id = $2
+        )
+    `
+    if err = tx.QueryRowContext(ctx, query, uid, postID).Scan(&response.Liked); err != nil {
+        return response, fmt.Errorf("couldn't query select post like existence: %v", err)
+    }
+    if response.Liked {
+        query = "DELETE FROM post_likes WHERE user_id = $1 AND post_id = $2"
+        if _, err = tx.ExecContext(ctx, query, uid, postID); err != nil {
+            return response, fmt.Errorf("couldn't query delete post like: %v", err)
+        }
+        query = "UPDATE posts SET likes_count = likes_count - 1 WHERE id = $1 RETURNING likes_count"
+        if err = tx.QueryRowContext(ctx, query, postID).Scan(&response.LikesCount); err != nil {
+            return response, fmt.Errorf("couldn't update and decrement post likes count: %v", err)
+        }
+    } else {
+        query = "INSERT INTO post_likes (user_id, post_id) VALUES ($1, $2)"
+        _, err = tx.ExecContext(ctx, query, uid, postID)
+
+        if isForeignKeyViolation(err) {
+            return response, ErrPostNotFound
+        }
+        if err != nil {
+            return response, fmt.Errorf("couldn't insert post like: %v", err)
+        }
+        query = "UPDATE posts SET likes_count = likes_count + 1 WHERE id = $1 RETURNING likes_count"
+        if err = tx.QueryRowContext(ctx, query, postID).Scan(&response.LikesCount); err != nil {
+            return response, fmt.Errorf("couldn't update and increment post likes count: %v", err)
+        }
+
+    }
+    if err = tx.Commit(); err != nil {
+        return response, fmt.Errorf("couldn't commit: %v", err)
+    }
+    response.Liked = !response.Liked
+    return response, nil
 }
 
 //CreatePost publishes a post to the user timeline and fans out it to his followers.
