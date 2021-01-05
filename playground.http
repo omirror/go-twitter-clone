@@ -12,7 +12,7 @@ POST {{host}}/login
 Content-Type: application/json
 
 {
-    "email": "mohammedosama@ieee.org"
+    "email": "ahmedosama@ieee.org"
 }
 
 ###
@@ -33,7 +33,7 @@ GET {{host}}/users?search=mohammed&first=2&after=
 Authorization: Bearer {{login.response.body.token}}
 ###
 
-POST {{host}}/users/mohammedosama/toggle_follow
+POST {{host}}/users/ahmedosama/toggle_follow
 Authorization: Bearer {{login.response.body.token}}
 
 ###
@@ -46,4 +46,33 @@ Authorization: Bearer {{login.response.body.token}}
 
 ###
 GET {{host}}/users/ahmedosama/followees?first=2&after=
+Authorization: Bearer {{login.response.body.token}}
+
+###
+POST {{host}}/posts
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{
+    "content": "Hello there",
+    "spoiler_of": "hello",
+    "nfsw": true
+}
+
+###
+GET {{host}}/posts/1
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+###
+
+POST {{host}}/posts/1/toggle_like
+Authorization: Bearer {{login.response.body.token}}
+
+###
+GET {{host}}/users/mohammedosama/posts?before=&after=
+Authorization: Bearer {{login.response.body.token}}
+
+###
+GET {{host}}/timeline
 Authorization: Bearer {{login.response.body.token}}
