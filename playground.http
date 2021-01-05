@@ -21,6 +21,14 @@ GET {{host}}/user
 Authorization: Bearer {{login.response.body.token}}
 
 ###
+
+PUT {{host}}/user/avatar
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: image/jpeg
+
+< assets/image.jpg
+
+###
 GET {{host}}/users?search=mohammed&first=2&after=
 Authorization: Bearer {{login.response.body.token}}
 ###

@@ -2,9 +2,9 @@ package main
 
 import (
     "database/sql"
-    "fmt"
     "log"
     "net/http"
+    "os"
 
     "github.com/hako/branca"
     _ "github.com/jackc/pgx/stdlib"
@@ -12,12 +12,13 @@ import (
     "github.com/secmohammed/go-twitter/internal/service"
 )
 
-const (
-    databaseURL = "postgresql://mohammed:root@127.0.0.1:5432/go_twitter?sslmode=disable"
-    port        = 3000
-)
-
 func main() {
+    var (
+        port        = env("PORT", "3000")
+        origin      = env("ORIGIN", "http://localhost:"+port)
+        databaseURL = env("DATABASE_URL", "postgresql://mohammed:root@127.0.0.1:5432/go_twitter?sslmode=disable")
+        brancaKey   = env("BRANCA_KEY", "supersecretkeyyoushouldnotcommit")
+    )
     db, err := sql.Open("pgx", databaseURL)
     if err != nil {
         log.Fatalf("couldn't open db connection: %v \n", err)
@@ -28,13 +29,18 @@ func main() {
         log.Fatalf("couldn't ping to db: %v \n", err)
         return
     }
-    codec := branca.NewBranca("supersecretkeyyoushouldnotcommit")
+    codec := branca.NewBranca(brancaKey)
     codec.SetTTL(uint32(service.TokenTTL.Seconds()))
-    s := service.New(db, codec)
+    s := service.New(db, codec, origin)
     h := handler.New(s)
-    addr := fmt.Sprintf(":%d", port)
-    log.Printf("accepting connections on port %d\n", port)
-    if err = http.ListenAndServe(addr, h); err != nil {
+    if err = http.ListenAndServe(":"+port, h); err != nil {
         log.Fatalf("Couldn't start server: %v\n", err)
     }
+}
+func env(key, fallbackValue string) string {
+    s := os.Getenv(key)
+    if s == "" {
+        return fallbackValue
+    }
+    return s
 }
