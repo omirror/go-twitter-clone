@@ -1,0 +1,10 @@
+ ☐ Add a helper to formulate error messages and return status code with structure of data.message
+ ☐ Add an config struct which have a map[string]interface{} key string and values map or string, inject it at the service.
+ ☐ Finish up the remaining endpoints that aren't done yet.
+ ☐ Refactor routes and set global auth middleware route for specific grouped routes.
+ ☐ use Gorm  instead of current driver and eager load relations when needed.
+ ☐  refactor comment_likes and post_likes to one table polymorphic.
+ ☐ use repository pattern with gorm and isolate business logic from service.
+ ☐ use dotenv to load env variables.
+ ☐ use go validator to validate inputs instead of validation manually.
+ ☐ formulate go-validator error messages using a global response adapter.

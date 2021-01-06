@@ -23,7 +23,7 @@ func (s *Service) Timeline(ctx context.Context, last int, before int64) ([]Timel
     }
     last = normalizePageSize(last)
     query, args, err := buildQuery(`
-        SELECT timeline.id, posts.id, content, spoiler_of, nsfw, likes_count, created_at
+        SELECT timeline.id, posts.id, content, spoiler_of, nsfw, likes_count, created_at, comments_count
         , posts.user_id = @uid AS mine
         , likes.user_id IS NOT NULL AS liked
         , users.username, users.avatar
@@ -66,6 +66,7 @@ func (s *Service) Timeline(ctx context.Context, last int, before int64) ([]Timel
             &ti.Post.Liked,
             &u.Username,
             &avatar,
+            &ti.Post.CommentsCount,
         }
         if err = rows.Scan(dest...); err != nil {
             return nil, fmt.Errorf("couldn't scan post: %v", err)
