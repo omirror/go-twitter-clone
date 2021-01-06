@@ -7,7 +7,7 @@ import (
     "os"
 
     "github.com/hako/branca"
-    _ "github.com/jackc/pgx/stdlib"
+    _ "github.com/lib/pq"
     "github.com/secmohammed/go-twitter/internal/handler"
     "github.com/secmohammed/go-twitter/internal/service"
 )
@@ -19,7 +19,7 @@ func main() {
         databaseURL = env("DATABASE_URL", "postgresql://mohammed:root@127.0.0.1:5432/go_twitter?sslmode=disable")
         brancaKey   = env("BRANCA_KEY", "supersecretkeyyoushouldnotcommit")
     )
-    db, err := sql.Open("pgx", databaseURL)
+    db, err := sql.Open("postgres", databaseURL)
     if err != nil {
         log.Fatalf("couldn't open db connection: %v \n", err)
         return
