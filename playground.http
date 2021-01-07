@@ -80,10 +80,37 @@ Authorization: Bearer {{login.response.body.token}}
 
 ###
 
-POST {{host}}/posts/1/comments
+POST {{host}}/posts/2/comments
 Authorization: Bearer {{login.response.body.token}}
 Content-Type: application/json
 
 {
     "content": "Hello there"
 }
+
+###
+
+GET {{host}}/posts/2/comments?before=&after=
+Authorization: Bearer {{login.response.body.token}}
+
+###
+
+POST {{host}}/comments/2/toggle_like
+Authorization: Bearer {{login.response.body.token}}
+
+
+###
+
+GET {{host}}/notifications
+Authorization: Bearer {{login.response.body.token}}
+
+###
+
+POST {{host}}/notifications/0/mark_as_read
+Authorization: Bearer {{login.response.body.token}}
+
+###
+
+POST {{host}}/mark_notifications_as_read
+Authorization: Bearer {{login.response.body.token}}
+

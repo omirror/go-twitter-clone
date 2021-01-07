@@ -56,13 +56,25 @@ CREATE TABLE IF NOT EXISTS comment_likes (
    comment_id INT NOT NULL REFERENCES comments,
    PRIMARY KEY (user_id, comment_id)
 )
-INSERT INTO users (id, email, username) VALUES 
+
+CREATE TABLE IF NOT EXISTS notifications (
+     id SERIAL NOT NULL PRIMARY KEY,
+     user_id INT NOT NULL REFERENCES users,
+     actors VARCHAR[] NOT NULL,
+     type VARCHAR NOT NULL,
+     read BOOLEAN NOT NULL DEFAULT false,
+     issued_at TIMESTAMPTZ NOT NULL DEFAULT now()
+ );
+
+CREATE INDEX IF NOT EXISTS sorted_notifications ON notifications (issued_at DESC);
+
+INSERT INTO users (id, email, username) VALUES
     (1, 'mohammedosama@ieee.org', 'mohammedosama'),
     (2, 'ahmedosama@ieee.org', 'ahmedosama');
 
-INSERT INTO posts (id, user_id, content, nsfw, comments_count) VALUES 
+INSERT INTO posts (id, user_id, content, nsfw, comments_count) VALUES
     (1, 1, 'sample post', false, 0);
-    
+
 INSERT INTO timeline (id, user_id, post_id) VALUES
     (1, 1, 1);
 INSERT INTO comments (id, user_id, post_id, content, likes_count) VALUES
