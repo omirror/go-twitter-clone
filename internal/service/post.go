@@ -8,8 +8,6 @@ import (
     "log"
     "strings"
     "time"
-
-    "github.com/sanity-io/litter"
 )
 
 var (
@@ -259,26 +257,20 @@ func (s *Service) CreatePost(ctx context.Context, content string, spoilerOf *str
     if err = tx.Commit(); err != nil {
         return ti, fmt.Errorf("Couldn't commit to create post: %v", err)
     }
-    go func(p Post) {
-        u, err := s.userByID(context.Background(), p.UserID)
-        if err != nil {
-            log.Printf("couldn't get post user: %v\n", err)
-            return
-        }
-        p.User = &u
-        p.Mine = false
-        p.Subscribed = false
-        tt, err := s.fanoutPost(p)
-        if err != nil {
-            log.Printf("couldn't fanout post: %v\n", err)
-            return
-        }
-        for _, ti = range tt {
-            log.Println(litter.Sdump(ti))
-            // TODO: broadcast timeline items
-        }
-    }(ti.Post)
+    go s.postCreated(ti.Post)
     return ti, nil
+}
+func (s *Service) postCreated(p Post) {
+    u, err := s.userByID(context.Background(), p.UserID)
+    if err != nil {
+        log.Printf("couldn't get post user: %v\n", err)
+        return
+    }
+    p.User = &u
+    p.Mine = false
+    p.Subscribed = false
+    go s.fanoutPost(p)
+    go s.notifyPostMention(p)
 }
 
 // TogglePostSubscription so you can stop receiving notifications from a thread.

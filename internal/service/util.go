@@ -3,6 +3,7 @@ package service
 import (
     "bytes"
     "fmt"
+    "regexp"
     "strings"
     "text/template"
 
@@ -10,6 +11,7 @@ import (
 )
 
 var queriesCache = make(map[string]*template.Template)
+var rxMentions = regexp.MustCompile(`\B@([a-zA-Z][a-zA-Z0-9_-]{0,17})`)
 
 const (
     minPageSize     = 1
@@ -61,4 +63,16 @@ func normalizePageSize(i int) int {
         return maxPageSize
     }
     return i
+}
+func collectMentions(s string) []string {
+    m := map[string]struct{}{}
+    u := []string{}
+    for _, submatch := range rxMentions.FindAllStringSubmatch(s, -1) {
+        val := submatch[1]
+        if _, ok := m[val]; !ok {
+            m[val] = struct{}{}
+            u = append(u, val)
+        }
+    }
+    return u
 }
