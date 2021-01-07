@@ -87,3 +87,25 @@ func (h *handler) createPost(w http.ResponseWriter, r *http.Request) {
     }
     respond(w, ti, http.StatusCreated)
 }
+
+func (h *handler) togglePostSubscription(w http.ResponseWriter, r *http.Request) {
+ 	ctx := r.Context()
+ 	postID, _ := strconv.ParseInt(way.Param(ctx, "post_id"), 10, 64)
+ 	out, err := h.TogglePostSubscription(ctx, postID)
+ 	if err == service.ErrUnauthenticated {
+ 		http.Error(w, err.Error(), http.StatusUnauthorized)
+ 		return
+ 	}
+
+ 	if err == service.ErrPostNotFound {
+ 		http.Error(w, err.Error(), http.StatusNotFound)
+ 		return
+ 	}
+
+ 	if err != nil {
+ 		respondError(w, err)
+ 		return
+ 	}
+
+ 	respond(w, out, http.StatusOK)
+ }

@@ -35,6 +35,7 @@ func New(s *service.Service) http.Handler {
 
     api.HandleFunc("POST", "/comments/:comment_id/toggle_like", h.toggleCommentLike)
     api.HandleFunc("GET", "/timeline", h.timeline)
+	api.HandleFunc("POST", "/posts/:post_id/toggle_subscription", h.togglePostSubscription)
 
     api.HandleFunc("GET", "/notifications", h.notifications)
     api.HandleFunc("POST", "/notifications/:notification_id/mark_as_read", h.markNotificationAsRead)

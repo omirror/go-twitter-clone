@@ -33,7 +33,7 @@ GET {{host}}/users?search=mohammed&first=2&after=
 Authorization: Bearer {{login.response.body.token}}
 ###
 
-POST {{host}}/users/ahmedosama/toggle_follow
+POST {{host}}/users/mohammedosama/toggle_follow
 Authorization: Bearer {{login.response.body.token}}
 
 ###
@@ -106,7 +106,7 @@ Authorization: Bearer {{login.response.body.token}}
 
 ###
 
-POST {{host}}/notifications/0/mark_as_read
+POST {{host}}/notifications/1/mark_as_read
 Authorization: Bearer {{login.response.body.token}}
 
 ###
