@@ -2,6 +2,7 @@ package handler
 
 import (
     "encoding/json"
+    "mime"
     "net/http"
     "strconv"
 
@@ -61,6 +62,11 @@ func (h *handler) toggleCommentLike(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) comments(w http.ResponseWriter, r *http.Request) {
+    if a, _, err := mime.ParseMediaType(r.Header.Get("Accept")); err == nil && a == "text/event-stream" {
+        h.subscribeToComments(w, r)
+        return
+    }
+
     ctx := r.Context()
     q := r.URL.Query()
     postID, _ := strconv.ParseInt(way.Param(ctx, "post_id"), 10, 64)
@@ -72,4 +78,22 @@ func (h *handler) comments(w http.ResponseWriter, r *http.Request) {
         return
     }
     respond(w, cc, http.StatusOK)
+}
+func (h *handler) subscribeToComments(w http.ResponseWriter, r *http.Request) {
+    f, ok := w.(http.Flusher)
+    if !ok {
+        respondError(w, errStreamingUnsupported)
+        return
+    }
+    ctx := r.Context()
+    postID, _ := strconv.ParseInt(way.Param(ctx, "post_id"), 10, 64)
+
+    header := w.Header()
+    header.Set("Cache-Control", "no-cache")
+    header.Set("Connection", "keep-alive")
+    header.Set("Content-Type", "text/event-stream")
+    for c := range h.SubscribeToComments(ctx, postID) {
+        writeSSe(w, c)
+        f.Flush()
+    }
 }

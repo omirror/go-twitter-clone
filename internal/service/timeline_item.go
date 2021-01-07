@@ -14,6 +14,10 @@ type TimelineItem struct {
     Post   Post  `json:"post"`
     User   *User `json:"user,omitempty"`
 }
+type timelineItemClient struct {
+    timeline chan TimelineItem
+    userID   int64
+}
 
 //Timeline is used to show the timeline of the authenticated user.
 func (s *Service) Timeline(ctx context.Context, last int, before int64) ([]TimelineItem, error) {
@@ -34,7 +38,7 @@ func (s *Service) Timeline(ctx context.Context, last int, before int64) ([]Timel
         LEFT JOIN post_likes AS likes
         ON likes.user_id = @uid AND likes.post_id = posts.id
         LEFT JOIN post_subscriptions AS subscriptions
- 			ON subscriptions.user_id = @uid AND subscriptions.post_id = posts.id
+            ON subscriptions.user_id = @uid AND subscriptions.post_id = posts.id
         WHERE timeline.user_id = @uid
         {{if .before}} AND posts.id < @before{{end}}
         ORDER BY created_at DESC
@@ -87,4 +91,28 @@ func (s *Service) Timeline(ctx context.Context, last int, before int64) ([]Timel
     }
 
     return tt, nil
+}
+func (s *Service) SubscribeToTimeline(ctx context.Context) (chan TimelineItem, error) {
+    uid, ok := ctx.Value(KeyAuthUserID).(int64)
+    if !ok {
+        return nil, ErrUnauthenticated
+    }
+    tt := make(chan TimelineItem)
+    c := &timelineItemClient{timeline: tt, userID: uid}
+    s.timelineItemClients.Store(c, struct{}{})
+    go func() {
+        <-ctx.Done()
+        s.timelineItemClients.Delete(c)
+        close(tt)
+    }()
+    return tt, nil
+}
+func (s *Service) broadcastTimelineItem(ti TimelineItem) {
+    s.timelineItemClients.Range(func(key, _ interface{}) bool {
+        client := key.(*timelineItemClient)
+        if client.userID == ti.UserID {
+            client.timeline <- ti
+        }
+        return true
+    })
 }

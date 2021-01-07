@@ -12,6 +12,12 @@ import (
 
 var ErrCommentNotFound = errors.New("Couldn't find comment with this id")
 
+type commentClient struct {
+    comments chan Comment
+    postID   int64
+    userID   *int64
+}
+
 // Comment moddel.
 type Comment struct {
     ID         int64     `json:"id"`
@@ -147,7 +153,7 @@ func (s *Service) commentCreated(c Comment) {
     c.Mine = false
     go s.notifyComment(c)
     go s.notifyCommentMention(c)
-    // TODO: broadcast comment.
+    go s.broadcastComment(c)
 }
 func (s *Service) ToggleCommentLike(ctx context.Context, commentID int64) (ToggleLikeResponse, error) {
     var response ToggleLikeResponse
@@ -196,4 +202,25 @@ func (s *Service) ToggleCommentLike(ctx context.Context, commentID int64) (Toggl
     }
     response.Liked = !response.Liked
     return response, nil
+}
+func (s *Service) SubscribeToComments(ctx context.Context, postID int64) chan Comment {
+    uid, _ := ctx.Value(KeyAuthUserID).(int64)
+    cc := make(chan Comment)
+    c := &commentClient{comments: cc, postID: postID, userID: &uid}
+    s.commentClients.Store(c, struct{}{})
+    go func() {
+        <-ctx.Done()
+        s.commentClients.Delete(c)
+        close(cc)
+    }()
+    return cc
+}
+func (s *Service) broadcastComment(c Comment) {
+    s.commentClients.Range(func(key, _ interface{}) bool {
+        client := key.(*commentClient)
+        if client.postID == c.PostID && !(client.userID != nil && *client.userID == c.UserID) {
+            client.comments <- c
+        }
+        return true
+    })
 }

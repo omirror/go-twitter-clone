@@ -20,6 +20,10 @@ type Notification struct {
     PostID   *int64    `json:"post_id, omitempty"`
     IssuedAt time.Time `json:"issued_at"`
 }
+type notificationClient struct {
+    notifications chan Notification
+    userID        int64
+}
 
 // Notifications for the authenticated user in desc order with backward pagination
 func (s *Service) Notifications(ctx context.Context, last int, before int64) ([]Notification, error) {
@@ -143,7 +147,7 @@ func (s *Service) notifyFollower(followerID, followeeID int64) {
         log.Printf("Couldn't commit notification: %v\n", err)
         return
     }
-    // TODO: broadcast follow notification.
+    go s.broadcastNotification(notification)
 }
 func (s *Service) notifyComment(c Comment) {
     actor := c.User.Username
@@ -167,7 +171,6 @@ func (s *Service) notifyComment(c Comment) {
         return
     }
     defer rows.Close()
-    notifications := make([]Notification, 0)
     for rows.Next() {
         var notification Notification
         if err = rows.Scan(&notification.ID, &notification.UserID, pq.Array(&notification.Actors), &notification.IssuedAt); err != nil {
@@ -176,13 +179,12 @@ func (s *Service) notifyComment(c Comment) {
         }
         notification.Type = "comment"
         notification.PostID = &c.PostID
-        notifications = append(notifications, notification)
+        go s.broadcastNotification(notification)
     }
     if err = rows.Err(); err != nil {
         log.Printf("Couldn't iterate over comment notification rows: %v\n", err)
         return
     }
-    // TODO: broadcast comment notifications.
 }
 func (s *Service) notifyPostMention(p Post) {
     mentions := collectMentions(p.Content)
@@ -205,7 +207,6 @@ func (s *Service) notifyPostMention(p Post) {
         return
     }
     defer rows.Close()
-    notifications := []Notification{}
     for rows.Next() {
         var n Notification
         if err = rows.Scan(&n.ID, &n.UserID, &n.IssuedAt); err != nil {
@@ -215,13 +216,38 @@ func (s *Service) notifyPostMention(p Post) {
         n.Actors = actors
         n.Type = "post_mention"
         n.PostID = &p.ID
-        notifications = append(notifications, n)
+        go s.broadcastNotification(n)
+
     }
     if err = rows.Err(); err != nil {
         log.Printf("Couldn't iterate over post mention notification rows: %v\n", err)
         return
     }
-    //TODO: broadcast post mention notifications
+}
+
+func (s *Service) SubscribeToNotifications(ctx context.Context) (chan Notification, error) {
+    uid, ok := ctx.Value(KeyAuthUserID).(int64)
+    if !ok {
+        return nil, ErrUnauthenticated
+    }
+    nn := make(chan Notification)
+    c := &notificationClient{notifications: nn, userID: uid}
+    s.notificationClients.Store(c, struct{}{})
+    go func() {
+        <-ctx.Done()
+        s.notificationClients.Delete(c)
+        close(nn)
+    }()
+    return nn, nil
+}
+func (s *Service) broadcastNotification(n Notification) {
+    s.notificationClients.Range(func(key, _ interface{}) bool {
+        client := key.(*notificationClient)
+        if client.userID == n.UserID {
+            client.notifications <- n
+        }
+        return true
+    })
 }
 func (s *Service) notifyCommentMention(c Comment) {
     mentions := collectMentions(c.Content)
@@ -248,7 +274,6 @@ func (s *Service) notifyCommentMention(c Comment) {
         return
     }
     defer rows.Close()
-    notifications := []Notification{}
     for rows.Next() {
         var n Notification
         if err = rows.Scan(&n.ID, &n.UserID, pq.Array(&n.Actors), &n.IssuedAt); err != nil {
@@ -257,11 +282,10 @@ func (s *Service) notifyCommentMention(c Comment) {
         }
         n.Type = "comment_mention"
         n.PostID = &c.PostID
-        notifications = append(notifications, n)
+        go s.broadcastNotification(n)
     }
     if err = rows.Err(); err != nil {
         log.Printf("Couldn't iterate over comment mention notification rows: %v\n", err)
         return
     }
-    //TODO: broadcast comment mention notifications
 }

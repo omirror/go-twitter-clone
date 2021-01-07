@@ -320,25 +320,26 @@ func (s *Service) TogglePostSubscription(ctx context.Context, postID int64) (Tog
 
     return out, nil
 }
-func (s *Service) fanoutPost(p Post) ([]TimelineItem, error) {
+func (s *Service) fanoutPost(p Post) {
     query := "INSERT INTO timeline (user_id, post_id) SELECT follower_id, $1 FROM follows WHERE followee_id = $2 RETURNING id, user_id"
     rows, err := s.db.Query(query, p.ID, p.UserID)
     if err != nil {
-        return nil, fmt.Errorf("couldn't insert timeline: %v", err)
+        log.Printf("couldn't insert timeline: %v", err)
+        return
     }
     defer rows.Close()
-    tt := []TimelineItem{}
     for rows.Next() {
         var ti TimelineItem
         if err = rows.Scan(&ti.ID, &ti.UserID); err != nil {
-            return nil, fmt.Errorf("Couldn't scan timeline item: %v", err)
+            log.Printf("Couldn't scan timeline item: %v", err)
+            return
         }
         ti.PostID = p.ID
         ti.Post = p
-        tt = append(tt, ti)
+        go s.broadcastTimelineItem(ti)
     }
     if err = rows.Err(); err != nil {
-        return nil, fmt.Errorf("couldn't iterate over timelines: %v", err)
+        log.Printf("couldn't iterate over timelines: %v", err)
+        return
     }
-    return tt, nil
 }
