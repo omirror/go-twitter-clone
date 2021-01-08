@@ -92,7 +92,7 @@ func (s *Service) Post(ctx context.Context, postID int64) (Post, error) {
         return p, fmt.Errorf("couldn't query select post: %v", err)
     }
     if avatar.Valid {
-        avatarURL := s.origin + "/public/avatars/users/" + avatar.String
+        avatarURL := s.origin + "/avatars/users/" + avatar.String
         u.AvatarURL = &avatarURL
     }
     p.User = &u

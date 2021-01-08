@@ -16,7 +16,8 @@ func New(s *service.Service) http.Handler {
     h := &handler{s}
     api := way.NewRouter()
     api.HandleFunc("POST", "/login", h.login)
-
+    api.HandleFunc("POST", "/send_magic_link", h.sendMagicLink)
+    api.HandleFunc("GET", "/auth_redirect", h.authRedirect)
     api.HandleFunc("GET", "/user", h.authUser)
     api.HandleFunc("POST", "/users/:username/toggle_follow", h.toggleFollow)
     api.HandleFunc("PUT", "/user/avatar", h.updateAvatar)
@@ -35,12 +36,15 @@ func New(s *service.Service) http.Handler {
 
     api.HandleFunc("POST", "/comments/:comment_id/toggle_like", h.toggleCommentLike)
     api.HandleFunc("GET", "/timeline", h.timeline)
-	api.HandleFunc("POST", "/posts/:post_id/toggle_subscription", h.togglePostSubscription)
+    api.HandleFunc("POST", "/posts/:post_id/toggle_subscription", h.togglePostSubscription)
 
     api.HandleFunc("GET", "/notifications", h.notifications)
     api.HandleFunc("POST", "/notifications/:notification_id/mark_as_read", h.markNotificationAsRead)
     api.HandleFunc("POST", "/mark_notifications_as_read", h.markAllNotificationsAsRead)
+
+    fs := http.FileServer(&spaFileSystem{http.Dir("public")})
     r := way.NewRouter()
     r.Handle("*", "/api...", http.StripPrefix("/api", h.withAuth(api)))
+    r.Handle("GET", "/...", fs)
     return r
 }

@@ -14,6 +14,14 @@ Content-Type: application/json
 {
     "email": "mohammedosama@ieee.org"
 }
+###
+POST {{host}}/api/send_magic_link
+Content-Type: application/json
+
+{
+    "email": "mohammedosama@ieee.org",
+    "redirectURI": "http://localhost/auth_redirect"
+}
 
 ###
 

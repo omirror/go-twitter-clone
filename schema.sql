@@ -76,7 +76,11 @@ CREATE TABLE IF NOT EXISTS notifications (
 
 CREATE INDEX IF NOT EXISTS sorted_notifications ON notifications (issued_at DESC);
 CREATE INDEX IF NOT EXISTS unique_notifications ON notifications (user_id, type, post_id, read);
-
+CREATE TABLE IF NOT EXISTS verification_codes (
+  id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id INT NOT NULL REFERENCES users,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+)
 INSERT INTO users (id, email, username) VALUES
     (1, 'mohammedosama@ieee.org', 'mohammedosama'),
     (2, 'ahmedosama@ieee.org', 'ahmedosama');

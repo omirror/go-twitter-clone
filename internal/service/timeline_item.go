@@ -80,7 +80,7 @@ func (s *Service) Timeline(ctx context.Context, last int, before int64) ([]Timel
             return nil, fmt.Errorf("couldn't scan post: %v", err)
         }
         if avatar.Valid {
-            avatarURL := s.origin + "/public/avatars/users/" + avatar.String
+            avatarURL := s.origin + "/avatars/users/" + avatar.String
             u.AvatarURL = &avatarURL
         }
         ti.Post.User = &u

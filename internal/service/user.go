@@ -145,7 +145,7 @@ func (s *Service) UpdateAvatar(ctx context.Context, r io.Reader) (string, error)
     if oldAvatar.Valid {
         defer os.Remove(path.Join(avatarsDir, oldAvatar.String))
     }
-    return s.origin + "/public/avatars/users/" + avatar, nil
+    return s.origin + "/avatars/users/" + avatar, nil
 }
 
 //User selects on user from the database with given username.
@@ -190,7 +190,7 @@ func (s *Service) User(ctx context.Context, username string) (UserProfile, error
         u.Email = ""
     }
     if avatar.Valid {
-        avatarURL := s.origin + "/public/avatars/users/" + avatar.String
+        avatarURL := s.origin + "/avatars/users/" + avatar.String
         u.AvatarURL = &avatarURL
     }
     return u, nil
@@ -321,7 +321,7 @@ func (s *Service) Users(ctx context.Context, search string, first int, after str
             u.Email = ""
         }
         if avatar.Valid {
-            avatarURL := s.origin + "/public/avatars/users/" + avatar.String
+            avatarURL := s.origin + "/avatars/users/" + avatar.String
             u.AvatarURL = &avatarURL
         }
         uu = append(uu, u)
@@ -390,7 +390,7 @@ func (s *Service) Followers(ctx context.Context, username string, first int, aft
             u.Email = ""
         }
         if avatar.Valid {
-            avatarURL := s.origin + "/public/avatars/users/" + avatar.String
+            avatarURL := s.origin + "/avatars/users/" + avatar.String
             u.AvatarURL = &avatarURL
         }
         uu = append(uu, u)
@@ -412,7 +412,7 @@ func (s *Service) userByID(ctx context.Context, id int64) (User, error) {
         return u, fmt.Errorf("couldn't query select auth user: %v", err)
     }
     if avatar.Valid {
-        avatarURL := s.origin + "/public/avatars/users/" + avatar.String
+        avatarURL := s.origin + "/avatars/users/" + avatar.String
         u.AvatarURL = &avatarURL
     }
     u.ID = id
@@ -476,7 +476,7 @@ func (s *Service) Followees(ctx context.Context, username string, first int, aft
             u.Email = ""
         }
         if avatar.Valid {
-            avatarURL := s.origin + "/public/avatars/users/" + avatar.String
+            avatarURL := s.origin + "/avatars/users/" + avatar.String
             u.AvatarURL = &avatarURL
         }
         uu = append(uu, u)
